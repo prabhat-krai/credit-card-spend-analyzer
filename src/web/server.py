@@ -45,31 +45,6 @@ def create_card(card: CardCreate):
         raise HTTPException(status_code=400, detail="Card name cannot be empty.")
     return db.add_card(name)
 
-@app.post("/api/demo")
-def load_demo():
-    card = db.add_card("Demo Premium Visa")
-    existing = db.get_transactions(card_id=str(card["id"]))
-    if not existing:
-        demo_txs = [
-            { "date": "2026-05-10", "merchant": "Amazon Online Shop", "amount": 4500.00, "category": "ecommerce" },
-            { "date": "2026-05-11", "merchant": "Zomato Delivery", "amount": 850.50, "category": "food" },
-            { "date": "2026-05-11", "merchant": "Swiggy Instamart", "amount": 1200.00, "category": "grocery" },
-            { "date": "2026-05-12", "merchant": "HP Fuel Station", "amount": 2500.00, "category": "petrol" },
-            { "date": "2026-05-14", "merchant": "Netflix Subscription", "amount": 649.00, "category": "entertainment" },
-            { "date": "2026-05-14", "merchant": "Zara Retail Store", "amount": 3499.00, "category": "shopping" },
-            { "date": "2026-05-15", "merchant": "Uber Ride", "amount": 450.00, "category": "travel" },
-            { "date": "2026-05-16", "merchant": "MakeMyTrip Flight", "amount": 7800.00, "category": "travel" },
-            { "date": "2026-05-18", "merchant": "Tata Power Utilities", "amount": 1850.00, "category": "utilities" },
-            { "date": "2026-05-19", "merchant": "Apollo Pharmacy", "amount": 620.00, "category": "health" },
-            { "date": "2026-05-20", "merchant": "Swiggy Delivery", "amount": 540.00, "category": "food" },
-            { "date": "2026-05-21", "merchant": "Jio Mobile Recharge", "amount": 899.00, "category": "utilities" },
-            { "date": "2026-05-22", "merchant": "Amazon Prime", "amount": 299.00, "category": "entertainment" },
-            { "date": "2026-05-24", "merchant": "BigBasket Grocery", "amount": 2150.00, "category": "grocery" },
-            { "date": "2026-05-25", "merchant": "Starbucks Coffee", "amount": 380.00, "category": "food" },
-            { "date": "2026-05-26", "merchant": "HDFC Insurance Premium", "amount": 12000.00, "category": "other" }
-        ]
-        db.add_transactions(card["id"], demo_txs)
-    return {"status": "success", "card_id": card["id"]}
 
 # Months API
 @app.get("/api/months")

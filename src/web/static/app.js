@@ -36,7 +36,6 @@ const fileInput = document.getElementById('file-input');
 const passwordInput = document.getElementById('password-input');
 const btnTogglePassword = document.getElementById('toggle-password');
 const btnAnalyze = document.getElementById('btn-analyze');
-const btnDemo = document.getElementById('btn-demo');
 const btnSyncFolder = document.getElementById('btn-sync-folder');
 
 // DOM ELEMENTS - KPIS
@@ -244,37 +243,6 @@ function setupUploadEventListeners() {
         }
         if (state.selectedFile) {
             uploadAndProcessStatement();
-        }
-    });
-
-    // Load Demo Data
-    btnDemo.addEventListener('click', async () => {
-        try {
-            loadingOverlay.classList.add('active');
-            updateLoadingProgress(50, "Generating Demo Premium Visa card and seeding spends...");
-            
-            const res = await fetch('/api/demo', { method: 'POST' });
-            if (!res.ok) throw new Error("Demo loading failed.");
-            
-            updateLoadingProgress(100, "Demo setup completed!");
-            const data = await res.json();
-            
-            await loadCards();
-            await loadMonths();
-            
-            // Set filters to Demo Card and trigger refresh
-            globalCardSelect.value = data.card_id;
-            globalMonthSelect.value = 'all';
-            
-            await fetchTransactions();
-            showToast("Demo database populated and loaded!", "success");
-            
-        } catch (e) {
-            showToast("Demo seeding failed: " + e.message, "error");
-        } finally {
-            setTimeout(() => {
-                loadingOverlay.classList.remove('active');
-            }, 500);
         }
     });
 }
