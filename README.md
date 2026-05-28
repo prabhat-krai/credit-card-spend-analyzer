@@ -7,7 +7,7 @@ A CLI tool that extracts and categorizes debit transactions from credit card PDF
 ## How It Works
 
 1. **PDF → Images** — The PDF statement is converted page-by-page into images (handles password-protected PDFs).
-2. **Images → LLM** — All page images are sent to `google/gemini-3-flash-preview` via [OpenRouter](https://openrouter.ai/) as a multimodal prompt.
+2. **Images → LLM** — All page images are sent to `google/gemini-3.5-flash` via [OpenRouter](https://openrouter.ai/) as a multimodal prompt.
 3. **LLM → Structured Data** — The LLM extracts every debit transaction with date, merchant, amount, and an auto-assigned category.
 4. **Summary** — A category-wise and merchant-wise spend summary is printed to the console.
 
@@ -86,7 +86,7 @@ python src/main.py -s ~/Downloads/HDFC_FEB.pdf
 ```
 Credit Card Spend Analyzer Started...
 Reading: statement_feb.pdf
-Sending 3 pages to google/gemini-3-flash-preview via OpenRouter...
+Sending 3 pages to google/gemini-3.5-flash via OpenRouter...
 -> Extracted 18 debit transactions.
 
 Found 18 total spends.

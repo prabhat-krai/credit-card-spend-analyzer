@@ -19,7 +19,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
     sys.exit("Error: OPENROUTER_API_KEY not set. Create a .env file.")
 
-MODEL = "google/gemini-3-flash-preview"
+MODEL = "google/gemini-3.5-flash"
 
 def image_to_base64(image):
     buffered = io.BytesIO()
