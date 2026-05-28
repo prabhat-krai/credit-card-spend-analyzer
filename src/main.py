@@ -62,8 +62,17 @@ Please extract all the DEBIT transactions (spends). Ignore any credit transactio
 For each debit transaction, return a clean merchant name, the exact amount, the date (YYYY-MM-DD format), and pick a single 
 suitable category like (ecommerce, food, grocery, petrol, travel, entertainment, utilities, health, shopping, other). 
 
-Return the output strictly as a JSON array of objects. 
-Example: [{"date": "2024-02-14", "merchant": "Amazon", "amount": 1499.00, "category": "ecommerce"}]
+Also, identify the credit card issuer bank (e.g. HDFC Bank, ICICI Bank, SBI Card, Axis Bank, American Express, etc.) from the statement.
+
+Return the output strictly as a JSON object containing:
+1. "card_issuer": a string with the detected card issuer bank name.
+2. "transactions": a JSON array of transaction objects.
+
+Example:
+{
+  "card_issuer": "HDFC Bank",
+  "transactions": [{"date": "2024-02-14", "merchant": "Amazon", "amount": 1499.00, "category": "ecommerce"}]
+}
 Only output the JSON block, nothing else."""
 
     messages = [
@@ -104,7 +113,7 @@ Only output the JSON block, nothing else."""
 
         if "choices" not in data or not data["choices"]:
             print(f"Unexpected API response: {data.get('error', data)}")
-            return []
+            return None
 
         content = data["choices"][0]["message"]["content"]
         
@@ -114,20 +123,30 @@ Only output the JSON block, nothing else."""
             content = match.group(1).strip()
             
         # Parse JSON
-        transactions = json.loads(content)
+        result = json.loads(content)
+        
+        if isinstance(result, dict) and "transactions" in result:
+            transactions = result["transactions"]
+            card_issuer = result.get("card_issuer", "Unknown Bank")
+        else:
+            transactions = result if isinstance(result, list) else []
+            card_issuer = "Unknown Bank"
         
         # Add source file
         for t in transactions:
             t['source_file'] = pdf_path.name
             
-        print(f"-> Extracted {len(transactions)} debit transactions.")
-        return transactions
+        print(f"-> Extracted {len(transactions)} debit transactions for issuer: {card_issuer}.")
+        return {
+            "card_issuer": card_issuer,
+            "transactions": transactions
+        }
         
     except (requests.RequestException, json.JSONDecodeError, KeyError) as e:
         print(f"Error calling LLM for {pdf_path.name}: {e}")
         if 'response' in locals() and hasattr(response, 'text'):
              print(f"Response: {response.text}")
-        return []
+        return None
 
 def start_web_server():
     import uvicorn
@@ -162,13 +181,24 @@ def main():
 
     print("Credit Card Spend Analyzer Started...")
     
-    all_transactions = process_statement(pdf_path, args.password)
+    result = process_statement(pdf_path, args.password)
         
-    if not all_transactions:
+    if not result:
         print("No transactions found or extraction failed.")
         return
+
+    if isinstance(result, dict):
+        all_transactions = result.get("transactions", [])
+        card_issuer = result.get("card_issuer", "Unknown Bank")
+    else:
+        all_transactions = result
+        card_issuer = "Unknown Bank"
         
-    print(f"\nFound {len(all_transactions)} total spends.")
+    if not all_transactions:
+        print("No transactions found.")
+        return
+        
+    print(f"\nFound {len(all_transactions)} total spends for {card_issuer}.")
 
     df = pd.DataFrame(all_transactions)
     

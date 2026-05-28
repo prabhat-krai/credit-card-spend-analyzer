@@ -37,6 +37,36 @@ def init_db():
     );
     """)
     
+    # Create Processed Statements Table to track imported files
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS processed_statements (
+        sha256 TEXT PRIMARY KEY,
+        filename TEXT NOT NULL,
+        processed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        card_id INTEGER,
+        FOREIGN KEY(card_id) REFERENCES cards(id) ON DELETE SET NULL
+    );
+    """)
+    
+    conn.commit()
+    conn.close()
+
+# Processed Statements APIs
+def is_statement_processed(file_hash: str) -> bool:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM processed_statements WHERE sha256 = ?;", (file_hash,))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
+
+def mark_statement_processed(file_hash: str, filename: str, card_id: Optional[int]):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR IGNORE INTO processed_statements (sha256, filename, card_id)
+        VALUES (?, ?, ?);
+    """, (file_hash, filename, card_id))
     conn.commit()
     conn.close()
 

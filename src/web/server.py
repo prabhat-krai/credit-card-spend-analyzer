@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from src.main import process_statement, OPENROUTER_API_KEY
 # Import database helpers
 from src.web import db
+# Import folder sync engine
+from src.web import sync
 
 app = FastAPI(title="Credit Card Spend Analyzer")
 
@@ -73,6 +75,15 @@ def load_demo():
 @app.get("/api/months")
 def list_months():
     return db.get_distinct_months()
+
+# Sync Downloads Folder API
+@app.post("/api/sync")
+def trigger_sync():
+    try:
+        sync_results = sync.sync_dropbox()
+        return sync_results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Transactions API
 @app.get("/api/transactions")

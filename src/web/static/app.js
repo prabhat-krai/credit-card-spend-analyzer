@@ -37,6 +37,7 @@ const passwordInput = document.getElementById('password-input');
 const btnTogglePassword = document.getElementById('toggle-password');
 const btnAnalyze = document.getElementById('btn-analyze');
 const btnDemo = document.getElementById('btn-demo');
+const btnSyncFolder = document.getElementById('btn-sync-folder');
 
 // DOM ELEMENTS - KPIS
 const kpiTotalSpend = document.getElementById('val-total-spend');
@@ -741,6 +742,8 @@ function setupActionEventListeners() {
         if (state.transactions.length === 0) return;
         exportToJSON();
     });
+    
+    btnSyncFolder.addEventListener('click', triggerFolderSync);
 }
 
 function exportToCSV() {
@@ -772,6 +775,36 @@ function exportToJSON() {
     link.click();
     document.body.removeChild(link);
     showToast("Downloaded JSON report successfully", "success");
+}
+
+async function triggerFolderSync() {
+    try {
+        btnSyncFolder.disabled = true;
+        loadingOverlay.classList.add('active');
+        updateLoadingProgress(30, "Scanning ~/Downloads/cc_statements for new files...");
+        
+        const res = await fetch('/api/sync', { method: 'POST' });
+        if (!res.ok) throw new Error("Sync failed.");
+        const data = await res.json();
+        
+        updateLoadingProgress(80, "Refreshing transaction lists...");
+        await loadCards();
+        await loadMonths();
+        await fetchTransactions();
+        
+        if (data.processed_files > 0) {
+            showToast(`Sync complete! Processed ${data.processed_files} new files, imported ${data.new_transactions} spends.`, "success");
+        } else {
+            showToast("Sync complete. No new statement files found.", "success");
+        }
+    } catch (e) {
+        showToast("Sync failed: " + e.message, "error");
+    } finally {
+        btnSyncFolder.disabled = false;
+        setTimeout(() => {
+            loadingOverlay.classList.remove('active');
+        }, 500);
+    }
 }
 
 // MODAL CONTROLLER
