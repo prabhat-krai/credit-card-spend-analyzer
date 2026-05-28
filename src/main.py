@@ -103,7 +103,8 @@ Only output the JSON block, nothing else."""
             json={
                 "model": MODEL,
                 "messages": messages,
-                "zdr": True
+                "zdr": True,
+                "service_tier": "flex"
             },
             timeout=180
         )
