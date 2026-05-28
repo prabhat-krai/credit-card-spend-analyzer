@@ -45,23 +45,40 @@ cp .env.example .env
 
 ## Usage
 
+### 🌐 Interactive Web Dashboard (Recommended)
+
+Start the local web server and open the dashboard in your browser:
+```bash
+python src/main.py
+```
+Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** to access the premium interactive interface where you can:
+- **Drag & Drop** statements to parse them using Gemini.
+- **Visualize** spending breakdown and timelines with interactive Chart.js charts.
+- **Edit Details Inline** — correct merchant names and categories on the fly, with instant chart recalculation.
+- **Search & Filter** transactions by merchant query or category.
+- **Export** your curated transaction lists as CSV or JSON.
+
+### 💻 Command Line Interface
+
+If you prefer extracting data directly to the terminal:
 ```bash
 python src/main.py -s <path-to-statement.pdf> [-p <password>]
 ```
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `-s`, `--statement` | Yes | Path to the credit card PDF statement |
+| `-s`, `--statement` | No | Path to the credit card PDF statement (if omitted, launches Web UI) |
 | `-p`, `--password` | No | Password to decrypt a protected PDF |
+| `-w`, `--web` | No | Explicitly launch the Web App Dashboard interface |
 
 ### Examples
 
 ```bash
-# Unprotected PDF
-python src/main.py -s ~/Downloads/HDFC_FEB.pdf
+# Launch interactive Web Dashboard (same as running python src/main.py)
+python src/main.py --web
 
-# Password-protected PDF
-python src/main.py -s ~/Downloads/AXIS_JAN.pdf -p mysecretpassword
+# Process PDF in CLI directly
+python src/main.py -s ~/Downloads/HDFC_FEB.pdf
 ```
 
 ### Sample Output
@@ -109,10 +126,16 @@ The LLM auto-assigns one of these categories to each transaction:
 ```
 credit-card-spend-analyzer/
 ├── src/
-│   └── main.py           # All logic — PDF processing, LLM call, summarization
-├── .env.example           # Template for environment variables
-├── .gitignore             # Ignores .env, PDFs, CSVs, venv, __pycache__
-├── requirements.txt       # Python dependencies
+│   ├── main.py           # CLI entrypoint & web launcher logic
+│   └── web/
+│       ├── server.py     # FastAPI backend serving API endpoints & static files
+│       └── static/       # Frontend assets
+│           ├── index.html# Dashboard markup
+│           ├── styles.css# Dark theme custom glassmorphism styles
+│           └── app.js    # State management, editing logic, exports, Chart.js
+├── .env.example          # Template for environment variables
+├── .gitignore            # Ignores .env, PDFs, CSVs, venv, temp_uploads
+├── requirements.txt      # Python dependencies
 └── README.md
 ```
 
@@ -125,6 +148,9 @@ credit-card-spend-analyzer/
 | `requests` | HTTP calls to OpenRouter API |
 | `pandas` | Aggregation and summary tables |
 | `python-dotenv` | Loads API key from `.env` |
+| `fastapi` | High performance web server framework |
+| `uvicorn` | ASGI server implementation to run FastAPI |
+| `python-multipart` | Handles multipart form-data (PDF file uploads) |
 
 ## Notes
 

@@ -4,3 +4,9 @@ venv/
 __pycache__/
 *.csv
 .DS_Store
+temp_uploads/
+spends.db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

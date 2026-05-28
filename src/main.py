@@ -129,11 +129,31 @@ Only output the JSON block, nothing else."""
              print(f"Response: {response.text}")
         return []
 
+def start_web_server():
+    import uvicorn
+    # Add root folder to sys.path so we can import src.web.server
+    root_dir = str(Path(__file__).resolve().parent.parent)
+    if root_dir not in sys.path:
+        sys.path.insert(0, root_dir)
+
+    from src.web.server import app
+    print("\n==============================================")
+    print("Starting Credit Card Spend Analyzer Dashboard")
+    print("Open http://127.0.0.1:8000 in your browser.")
+    print("==============================================\n")
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+
 def main():
     parser = argparse.ArgumentParser(description="Credit Card Spend Analyzer (End-to-End LLM)")
-    parser.add_argument("-s", "--statement", required=True, help="Path to the PDF statement")
+    parser.add_argument("-s", "--statement", default=None, help="Path to the PDF statement (if omitted, launches Web UI)")
     parser.add_argument("-p", "--password", default=None, help="Password for the PDF if it is protected")
+    parser.add_argument("-w", "--web", action="store_true", help="Launch the Web App Dashboard interface")
     args = parser.parse_args()
+
+    # Launch web UI if --web is set or if no statement is provided
+    if args.web or args.statement is None:
+        start_web_server()
+        return
 
     pdf_path = Path(args.statement)
     if not pdf_path.exists():

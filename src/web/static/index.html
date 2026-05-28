@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Spend Analyzer Dashboard</title>
+    <!-- Google Fonts: Outfit (headings) & Inter (UI text) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js for beautiful interactive visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="bg-blur-circle primary"></div>
+    <div class="bg-blur-circle secondary"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Spend Analyzer</h1>
+                    <p class="tagline">Multimodal AI statement parser</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <span id="api-status" class="status-pill status-checking">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Checking API...</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- GLOBAL DATABASE FILTERS -->
+        <div class="global-filters glass">
+            <div class="filter-group">
+                <label for="global-card-select">Credit Card:</label>
+                <div class="select-button-wrapper">
+                    <select id="global-card-select">
+                        <option value="all">All Cards</option>
+                    </select>
+                    <button id="btn-add-card" class="btn btn-secondary btn-sm">+ Add Card</button>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label for="global-month-select">Statement Month:</label>
+                <select id="global-month-select">
+                    <option value="all">All Months</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT: UPLOAD & KPI OVERVIEW -->
+        <section class="top-section">
+            <!-- UPLOAD PANEL -->
+            <div class="panel glass upload-panel">
+                <div class="panel-header">
+                    <h2>Analyze Statement</h2>
+                    <button id="btn-demo" class="btn btn-secondary btn-sm">Load Demo Data</button>
+                </div>
+                <div class="panel-body">
+                    <div id="drop-zone" class="drop-zone">
+                        <input type="file" id="file-input" accept="application/pdf" hidden>
+                        <div class="drop-zone-content">
+                            <div class="upload-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                            </div>
+                            <p class="drop-title">Drag & drop your statement PDF</p>
+                            <p class="drop-subtitle">or click to browse files</p>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-settings">
+                        <div class="input-group">
+                            <label for="upload-card-select">Select Card for Statement <span class="required-star">*</span></label>
+                            <select id="upload-card-select">
+                                <option value="" disabled selected>Choose a card profile...</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="password-input">PDF Password <span class="label-optional">(only if encrypted)</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" id="password-input" placeholder="Enter statement password">
+                                <button type="button" id="toggle-password" class="btn-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="btn-analyze" class="btn btn-primary btn-block" disabled>Analyze Selected Statement</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI DASHBOARD CARDS -->
+            <div class="kpi-grid">
+                <div class="kpi-card glass" id="kpi-total-spend">
+                    <div class="kpi-icon total">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Total Spending</h3>
+                        <p class="kpi-value" id="val-total-spend">Rs. 0.00</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass" id="kpi-total-count">
+                    <div class="kpi-icon count">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Transactions</h3>
+                        <p class="kpi-value" id="val-total-count">0</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass" id="kpi-top-category">
+                    <div class="kpi-icon category">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Top Category</h3>
+                        <p class="kpi-value" id="val-top-category">N/A</p>
+                        <p class="kpi-subtext" id="val-top-category-amount">Rs. 0.00</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass" id="kpi-top-merchant">
+                    <div class="kpi-icon merchant">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Top Merchant</h3>
+                        <p class="kpi-value" id="val-top-merchant">N/A</p>
+                        <p class="kpi-subtext" id="val-top-merchant-amount">Rs. 0.00</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHARTS SECTION -->
+        <section class="charts-section" style="display: none;" id="dashboard-charts">
+            <div class="chart-card glass">
+                <h3>Spending by Category</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card glass">
+                <h3>Top Merchants</h3>
+                <div class="chart-container">
+                    <canvas id="merchantChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card glass full-width">
+                <h3>Spending Timeline</h3>
+                <div class="chart-container wide">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- DETAILED LIST & FILTERS -->
+        <section class="transactions-section" style="display: none;" id="dashboard-list">
+            <div class="panel glass">
+                <div class="panel-header table-actions">
+                    <div class="table-title">
+                        <h2>Transaction Details</h2>
+                        <span class="count-badge" id="filtered-count">0 of 0 items</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="btn-export-csv" class="btn btn-secondary btn-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Export CSV
+                        </button>
+                        <button id="btn-export-json" class="btn btn-secondary btn-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Export JSON
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-input">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+                        <input type="text" id="search-merchant" placeholder="Search by merchant...">
+                    </div>
+                    <div class="filter-select">
+                        <select id="filter-category">
+                            <option value="all">All Categories</option>
+                            <option value="ecommerce">Ecommerce</option>
+                            <option value="food">Food</option>
+                            <option value="grocery">Grocery</option>
+                            <option value="petrol">Petrol</option>
+                            <option value="travel">Travel</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="utilities">Utilities</option>
+                            <option value="health">Health</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="sorting-controls">
+                        <select id="sort-by">
+                            <option value="date-desc">Date (Newest First)</option>
+                            <option value="date-asc">Date (Oldest First)</option>
+                            <option value="amount-desc">Amount (High to Low)</option>
+                            <option value="amount-asc">Amount (Low to High)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="transaction-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%">Date</th>
+                                <th style="width: 35%">Merchant Name</th>
+                                <th style="width: 20%">Amount (Rs.)</th>
+                                <th style="width: 20%">Category</th>
+                                <th style="width: 10%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-rows">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- NO DATA PLACEHOLDER -->
+        <section class="placeholder-section" id="no-data-placeholder">
+            <div class="placeholder-card glass">
+                <div class="placeholder-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                </div>
+                <h3>No Statement Analyzed Yet</h3>
+                <p>Upload your credit card statement PDF above or click "Load Demo Data" to explore the dashboard.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- LOADING & PROGRESS DIALOG -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-card glass">
+            <div class="spinner-container">
+                <div class="glow-spinner"></div>
+                <div class="spinner-inner-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+            </div>
+            <h3>Analyzing Statement...</h3>
+            <p class="loading-step" id="loading-step-text">Processing pages and decrypting document...</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="loading-progress-bar"></div>
+            </div>
+            <p class="loading-sub">This can take up to 60 seconds as the multimodal AI processes page images.</p>
+        </div>
+    </div>
+
+    <!-- ADD CARD MODAL -->
+    <div id="add-card-modal" class="modal-overlay">
+        <div class="modal-card glass">
+            <div class="modal-header">
+                <h3>Add New Credit Card</h3>
+                <button id="btn-close-modal" class="btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="new-card-name">Card Profile Name</label>
+                    <input type="text" id="new-card-name" placeholder="e.g. HDFC Infinia, SBI Cashback">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-cancel-card" class="btn btn-secondary">Cancel</button>
+                <button id="btn-save-card" class="btn btn-primary">Create Card</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
