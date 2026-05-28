@@ -1,6 +1,6 @@
 # 💳 Credit Card Spend Analyzer
 
-> Built with [Antigravity](https://antigravity.dev) & Gemini 3.1 Pro 🚀
+> Built with [Antigravity](https://antigravity.dev) & Gemini 3.5 Flash 🚀
 
 A CLI tool that extracts and categorizes debit transactions from credit card PDF statements using a multimodal LLM. Point it at a statement, and it gives you a spend breakdown by category and merchant — no manual data entry needed.
 
@@ -38,9 +38,11 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure your API key
+# Configure your environment variables
 cp .env.example .env
-# Edit .env and paste your OpenRouter API key
+# Edit .env and configure your variables:
+# OPENROUTER_API_KEY="your-openrouter-key"
+# STATEMENT_PASSWORDS="comma,separated,decryption,passwords"
 ```
 
 ## Usage
@@ -53,6 +55,22 @@ python src/main.py
 ```
 Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** to access the premium interactive interface where you can:
 - **Drag & Drop** statements to parse them using Gemini.
+- **Auto-Sync** from your Downloads subfolder (details below).
+- **Edit Details Inline** — correct merchant names and categories on the fly, with instant chart recalculation.
+- **Search & Filter** transactions by card profile, billing month, merchant search, or category.
+- **Export** your curated transaction lists as CSV or JSON.
+
+### 🔄 Automatic Downloads Folder Sync
+
+To sync statements friction-free without exposing your Gmail credentials:
+1. Create a folder named `cc_statements` in your local Downloads directory: `~/Downloads/cc_statements/`.
+2. Save/download any credit card statement PDF files into this folder.
+3. On the web dashboard, click the **`[🔄 Sync Downloads Folder]`** button.
+
+**How it works**:
+- The engine calculates SHA-256 hashes of statement PDFs to prevent processing duplicate files.
+- Gemini auto-identifies the card issuer bank name, which is matched to SQLite card profiles (created dynamically).
+- If files are password-protected, the engine attempts decryption in sequence using the passwords set in `STATEMENT_PASSWORDS` in `.env`.
 - **Visualize** spending breakdown and timelines with interactive Chart.js charts.
 - **Edit Details Inline** — correct merchant names and categories on the fly, with instant chart recalculation.
 - **Search & Filter** transactions by merchant query or category.
@@ -128,13 +146,15 @@ credit-card-spend-analyzer/
 ├── src/
 │   ├── main.py           # CLI entrypoint & web launcher logic
 │   └── web/
+│       ├── db.py         # SQLite database management schema & helpers
 │       ├── server.py     # FastAPI backend serving API endpoints & static files
+│       ├── sync.py       # Downloads folder synchronization engine
 │       └── static/       # Frontend assets
 │           ├── index.html# Dashboard markup
 │           ├── styles.css# Dark theme custom glassmorphism styles
 │           └── app.js    # State management, editing logic, exports, Chart.js
 ├── .env.example          # Template for environment variables
-├── .gitignore            # Ignores .env, PDFs, CSVs, venv, temp_uploads
+├── .gitignore            # Ignores .env, spends.db, PDFs, venv, temp_uploads
 ├── requirements.txt      # Python dependencies
 └── README.md
 ```
